@@ -1,0 +1,21 @@
+mpls traffic-eng
+
+ interface GigabitEthernet0/0/0/1
+ !
+ interface GigabitEthernet0/0/0/2
+ !
+ interface GigabitEthernet0/0/0/3
+ !
+ pce
+  peer source ipv4 172.16.2.10
+  peer ipv4 172.16.2.1 # PCE IP 
+  !
+  stateful-client
+   instantiation
+  !
+  reoptimize 60
+ !
+ auto-tunnel pcc
+  tunnel-id min 1 max 100
+ !
+!
