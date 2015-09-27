@@ -6,10 +6,13 @@ message LSP {
     message LSPObject {
         optional uint32 plsp_id = 1;
         optional bool delegated = 2;
-        optional bool administrative = 3;
-        optional uint32 operational = 4;
+        optional bool sync = 3;
+        optional bool remove = 4;
+        optional bool administrative = 5;
+        optional uint32 operational = 6;
+        optional bool create = 7;
     }
-    
+
     message LSPAttributeObject {
         optional uint32 setup_prio = 1;
         optional uint32 hold_prio = 2;
@@ -26,10 +29,15 @@ message LSP {
         optional string node_ip =1;
         optional uint32 node_mask =2;
     }
-    
+    message SRPSubObject {
+        optional uint32 srp_id = 1;
+    }
+
     optional LSPObject lsp_obj = 2;
     optional LSPAttributeObject lspa_obj = 3;
     repeated EROSubObject ero =4;
     repeated RROSubObject rro =5;
-    optional uint32 bandwidth =6;
+    optional SRPSubObject srp =6;
+    optional uint32 bandwidth = 7;
+
 }
