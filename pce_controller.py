@@ -57,7 +57,7 @@ def send_ka(client_sock,pcep_context):
         gevent.sleep(pcep_context._ka_timer)
 
 def pcc_handler(client_sock,sid,controller,parsed_results):
-    Flag=True
+    PCE_INIT_Flag=True
     pcep_context = pcep_handler.PCEP(open_sid = sid)
     print ("Received Client Request from ",client_sock[1])
     msg_received = client_sock[0].recv(1000)
@@ -69,17 +69,18 @@ def pcc_handler(client_sock,sid,controller,parsed_results):
         parsed_msg = pcep_context.parse_recvd_msg(msg)
         result = controller.handle_pce_message(client_sock[1],parsed_msg)
         pcep_msg= None
-        if Flag:
+        if PCE_INIT_Flag:
             if parsed_results[0]:
                 pcep_msg = pcep_context.generate_sr_lsp_inititate_msg(parsed_results[5],parsed_results[2],parsed_results[3],parsed_results[1])
-                print ("Creating TE Tunnel")
+                print ("Creating SR TE Tunnel")
             else:
                 pcep_msg = pcep_context.generate_lsp_inititate_msg(parsed_results[4],parsed_results[2],parsed_results[3],parsed_results[1])
                 print ("Creating TE Tunnel")
-            Flag=False
+            PCE_INIT_Flag=False
         if pcep_msg:
             client_sock[0].send(pcep_msg)
     client_sock[0].close()
+
 
 def main ():
     CURRENT_SID=0
