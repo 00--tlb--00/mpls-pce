@@ -12,8 +12,6 @@ mpls traffic-eng
   peer source ipv4 172.16.2.10
   peer ipv4 172.16.2.1
   !
-  peer ipv4 192.168.24.128
-  !
   segment-routing
   stateful-client
    instantiation
