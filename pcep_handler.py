@@ -42,6 +42,8 @@ class PCEP(object):
        self._common_obj_hdr_format= '!BBH'
        self._open_obj_format = '!BBBB'
        self._spc_tlv = struct.pack("!HHI",16,4,5)
+       self._spc_sr_tlv = struct.pack("!HHI",26,4,10)
+       self._spc_sr_tlv_format = "!HHI"
        self._symbolic_path_name_tlv = '!HH8s'
        self._state = 'not_initialized'
        self._lsp_obj_fmt = "!I"
@@ -131,17 +133,19 @@ class PCEP(object):
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    """
    def parse_open_msg(self,common_hdr,msg):
-    self.parse_common_obj_hdr(msg)
-    common_object_body = struct.unpack(self._open_obj_format,msg[8:12])
-    self._open_object_SID = common_object_body[3]
-    open_object_DeadTimer = common_object_body[2]
-    self._peer_ka_timer = common_object_body[1]
-    open_object_version = common_object_body[0] >> 5
-    print ("SID Is %s "%(self._open_object_SID))
-    if (common_hdr[2] > 12):
-        print ("StateFul Capabiity Support ")
-    self._state='initialized'
-    return (self._open_object_SID)
+       self.parse_common_obj_hdr(msg)
+       common_object_body = struct.unpack_from(self._open_obj_format,msg[8:])
+       self._open_object_SID = common_object_body[3]
+       open_object_DeadTimer = common_object_body[2]
+       self._peer_ka_timer = common_object_body[1]
+       open_object_version = common_object_body[0] >> 5
+       print ("SID Is %s "%(self._open_object_SID))
+       if (common_hdr[2] > 12):
+           print ("StateFul Capabiity Support ")
+       if (common_hdr[2] > 20):
+           print ("SR Capability Support Too")
+       self._state='initialized'
+       return (self._open_object_SID)
 
    def parse_ka_msg(self,common_hdr,msg):
        print ("KA MSG")
@@ -287,11 +291,21 @@ class PCEP(object):
 
    def generate_open_msg(self,ka_timer):
        self._ka_timer= ka_timer
-       common_hdr = struct.pack("!BBH",32,1,20)
-       common_obj_hdr= struct.pack("!BBH",1,16,16)
+       common_hdr = struct.pack("!BBH",32,1,28)
+       common_obj_hdr= struct.pack("!BBH",1,16,24)
        open_object = struct.pack(self._open_obj_format,32,self._ka_timer,4*self._ka_timer,self._open_object_SID)
        print ("Sending Open Message to PCC")
-       return b"".join((common_hdr,common_obj_hdr,open_object,self._spc_tlv))
+       return b"".join((common_hdr,common_obj_hdr,open_object,self._spc_tlv,self._spc_sr_tlv))
+
+   '''
+   def generate_sr_open_msg(self,ka_timer):
+       self._ka_timer = ka_timer
+       common_hdr = struct.pack("!BBH",32,1,28)
+       common_obj_hdr = struct.pack("!BBH",1,16,24)
+       open_object = struct.pack(self._open_obj_format,32,self._ka_timer,4*self._ka_timer,self._open_object_SID)
+       print ("Sending Open Message to PCC with SR")
+       retunr b"".join((common_hdr,common_obj_hdr,open_object,self._spc_tlv,self._spc_sr_tlv))
+   '''
 
    def generate_ka_msg(self):
        keepalive_msg = struct.pack(self._common_hdr_format,32,2,4)
@@ -316,14 +330,22 @@ class PCEP(object):
 
    '''
 
+   def generate_sr_srp_object(self,srp_id):
+       size = 8
+       packed_obj = struct.pack(self._srp_obj_fmt,0,srp_id)
+       packed_common_hdr = self.generate_common_obj_hdr(33,1,size+4,2)
+       return (size+4,b"".join((packed_common_hdr,packed_obj)))
+
    def generate_srp_object(self,srp_id):
        size = 8
        packed_obj = struct.pack(self._srp_obj_fmt,0,srp_id)
        packed_common_hdr = self.generate_common_obj_hdr(33,1,size+4)
        return (size+4,b"".join((packed_common_hdr,packed_obj)))
 
+
+
    '''
-  0                   1                   2                   3
+    0                   1                   2                   3
       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      |                PLSP-ID                |   Flags |C|  O|A|R|S|D|
@@ -349,7 +371,7 @@ class PCEP(object):
        return (size+4,b"".join((packed_common_hdr,packed_obj)))
 
    '''
-  0                   1                   2                   3
+   0                   1                   2                   3
       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      |                PLSP-ID                |   Flags |C|  O|A|R|S|D|
@@ -408,6 +430,51 @@ class PCEP(object):
        summarize_obj = ((loose_hop_flag << 7 ) | (subobj_type & 127))
        packed_obj = struct.pack("!BBIBB",(loose_hop_flag<< 7)|1,8,subobj_ip,subobj_mask,0)
        return (size,packed_obj)
+
+   '''
+         0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |L|    Type     |     Length    |  ST   |     Flags     |F|S|C|M|
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                              SID                              |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     //                        NAI (variable)                       //
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+        0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                      Local IPv4 address                       |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+
+   '''
+
+
+
+   def generate_sr_ero_subobject(self,sr_ero_subobj):
+       size=12
+       subobj_type =5
+       loose_hop_flag = 0
+       SID_TYPE = 16 #0001 0000
+       M_FLAG =1
+       ero_subobj = sr_ero_subobj[1] << 12
+       summarize_obj = ((loose_hop_flag << 7) | (subobj_type & 127))
+       packed_obj = struct.pack("!BBBBII",(loose_hop_flag<<7)|5,size,SID_TYPE,M_FLAG,ero_subobj,self.ip2int(sr_ero_subobj[0]))
+       return (size,packed_obj)
+
+   def generate_sr_ero_object(self,ero_list):
+       subobj_size = 0
+       packed_ero_obj = b''
+       for ero_subobj in ero_list:
+           packed_subobj = self.generate_sr_ero_subobject(ero_subobj)
+           subobj_size += packed_subobj[0]
+           packed_ero_obj = packed_ero_obj + packed_subobj[1]
+       packed_common_hdr = self.generate_common_obj_hdr(7,1,subobj_size+4)
+       return (subobj_size+4,packed_common_hdr + packed_ero_obj)
+
 
    def generate_ero_object(self,ero_list):
        subobj_size=0
@@ -519,6 +586,45 @@ class PCEP(object):
        common_hdr = struct.pack(self._common_hdr_format,32,11,size+4)
        return b"".join((common_hdr,packed_lspupd_msg))
 
+   def generate_sr_lsp_inititate_msg(self,ERO_LIST,TUNNEL_SRC_DST,LSPA_PROPERTIES,TUNNEL_NAME):
+       size =0
+       ero_ip_list = list ()
+       packed_lspint_msg = b''
+
+       if self._srp_id < 255:
+           packed_srp_msg_obj = self.generate_sr_srp_object(self._srp_id)
+           self._srp_id+=1
+       else:
+           self._srp_id =1
+           packed_srp_msg_obj = self.generate_sr_srp_object(self._srp_id)
+       size += packed_srp_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_srp_msg_obj[1]))
+
+       packed_lsp_msg_obj = self.generate_pceint_lsp_obj(TUNNEL_NAME)
+       size+= packed_lsp_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_lsp_msg_obj[1]))
+
+       source = self.ip2int(TUNNEL_SRC_DST[0])
+       destination = self.ip2int(TUNNEL_SRC_DST[1])
+       packed_endpoint_msg_obj= self.generate_endpoint_obj(source,destination)
+       size += packed_endpoint_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_endpoint_msg_obj[1]))
+
+       packed_ero_msg_obj = self.generate_sr_ero_object(ERO_LIST)
+       size+= packed_ero_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_ero_msg_obj[1]))
+
+       packed_lspa_msg_obj = self.generate_pceint_lspa_obj(LSPA_PROPERTIES)
+       size+= packed_lspa_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_lspa_msg_obj[1]))
+
+       packed_bw_msg_obj = self.generate_pceint_bw_object()
+       size+= packed_bw_msg_obj[0]
+       packed_lspint_msg = b"".join((packed_lspint_msg,packed_bw_msg_obj[1]))
+
+       common_hdr = struct.pack(self._common_hdr_format,32,12,size+4)
+       return b"".join((common_hdr,packed_lspint_msg))
+
    def generate_lsp_inititate_msg(self,ERO_LIST,TUNNEL_SRC_DST,LSPA_PROPERTIES,TUNNEL_NAME):
        size =0
        ero_ip_list = list ()
@@ -560,12 +666,6 @@ class PCEP(object):
        '''
        common_hdr = struct.pack(self._common_hdr_format,32,12,size+4)
        return b"".join((common_hdr,packed_lspint_msg))
-
-
-
-
-
-
 
 
 
