@@ -54,6 +54,7 @@ class PCEP(object):
        self._srp_id = 1
        self._endpoint_obj_fmt = "!II"
        self._open_object_SID = 0
+       self._open_subobj_fmt = "!BBH"
        self._state = 'not initialzied'
        self._functions_dict = dict()
        '''self._functions_dict[4,1] = self.parse_endpoints_object'''
@@ -118,7 +119,7 @@ class PCEP(object):
        object_type = common_obj_hdr[1] >> 4
        #3 = 0000 0011
        object_flag_PI = common_obj_hdr[1] & 3
-       print ("Object Class %s, Object Type %s and Object Length %s "% (object_class,object_type,object_length))
+       #print ("Object Class %s, Object Type %s and Object Length %s "% (object_class,object_type,object_length))
        return (object_class,object_type,object_flag_PI,object_length)
 
    """Open Object Format:
@@ -166,7 +167,6 @@ class PCEP(object):
        lsp_obj = struct.unpack_from(self._lsp_obj_fmt,msg[8+offset:])
        plsp_id = lsp_obj[0] >> 12
        c_flag=d_flag=s_flag=r_flag=a_flag=o_flag = 0
-       print ("Lenght of common_obj_hdr",com_obj_hdr)
        if (lsp_obj[0] & 1):
            d_flag = 1
        if (lsp_obj[0] & 2):
@@ -206,7 +206,7 @@ class PCEP(object):
            else:
                parsed_state_report.append(("unknown obj",))
            offset = offset+parsed_obj_header[3]
-           print ("Offset VAlue is ",offset)
+           #print ("Offset VAlue is ",offset)
        print ("Parsed State Report",parsed_state_report)
        return ("State_Report",parsed_state_report)
 
@@ -220,6 +220,11 @@ class PCEP(object):
            ero_sobj_ipv4_add = ero_sobj[2]
            ero__sobj_ipv4_len = ero_sobj[3]
            return (sobj_length,loose_hop_flag,socket.inet_ntoa(struct.pack("!I",ero_sobj_ipv4_add)),ero__sobj_ipv4_len)
+       elif sobj_type == 5:
+           ero_sobj = struct.unpack_from("!BBHII",ero_obj)
+           ero_sobj_sr_nodelabel = (ero_sobj[3] >> 12)
+           ero_sobj_sr_ipv4_node = ero_sobj[4]
+           return (sobj_length,loose_hop_flag,ero_sobj_sr_nodelabel,socket.inet_ntoa(struct.pack("!I",ero_sobj_sr_ipv4_node)))
        else :
            return (1000,None,None)
 
@@ -232,23 +237,46 @@ class PCEP(object):
    | IPv4 address (continued)      | Prefix Length |      Resvd    |
    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
+                      1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |L|    Type     |     Length    |  ST   |     Flags     |F|S|C|M|
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                              SID                              |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     //                        NAI (variable)                       //
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                      Local IPv4 address                       |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 """
 
    def parse_ero_object(self,msg,com_obj_hdr,offset=0):
        parsed_ero_size = 0
        ero_list = list ()
-       while (parsed_ero_size + 4) < com_obj_hdr[3]:
-           sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
-           parsed_ero_size += sub_obj[0]
-           ero_list.append(sub_obj)
-       return ("ERO_List",(ero_list))
+       com_subobj_hdr = struct.unpack_from(self._open_subobj_fmt,msg[offset+8:])
+       if com_subobj_hdr[0] == 1:
+           while (parsed_ero_size + 4) < com_obj_hdr[3]:
+               sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
+               parsed_ero_size += sub_obj[0]
+               ero_list.append(sub_obj)
+           return ("ERO_List",(ero_list))
+       elif com_subobj_hdr[0] == 5:
+           while (parsed_ero_size+4) < com_obj_hdr[3]:
+               sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
+               parsed_ero_size+= sub_obj[0]
+               ero_list.append((sub_obj))
+           return ("SR_ERO_lIST",(ero_list))
 
    def parse_lspa_object(self,msg,com_obj_hdr,offset=0):
        lspa_obj = struct.unpack_from(self._lspa_obj_fmt,msg[offset+8:])
        setup_pri = lspa_obj[3]
        hold_pri = lspa_obj[4]
        L_flag = lspa_obj[5]&1
-       print ("lspa obj is %s %s %s" %(setup_pri,hold_pri,L_flag))
        return ('LSPA',(setup_pri,hold_pri,L_flag))
 
    def parse_bw_object(self,msg,com_obj_hdr,offset=0):
@@ -280,10 +308,8 @@ class PCEP(object):
 
    def parse_srp_object(self,msg,common_obj_hdr,offset=0):
        size = 8
-       print ("Before unpacking",msg[offset+8:8])
        unpacked_obj = struct.unpack_from(self._srp_obj_fmt,msg[offset+8:])
        srp_id = unpacked_obj[1]
-       print (" Here is the Unpacked OBJ and SRP ID ",unpacked_obj,srp_id)
        return ('SRP_ID',(srp_id,0))
 
    def parse_ka_msg(self,common_hdr,msg):
