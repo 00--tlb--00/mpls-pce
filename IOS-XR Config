@@ -1,5 +1,7 @@
 mpls traffic-eng
-
+ interface GigabitEthernet0/0/0/0
+  attribute-names RED
+ !
  interface GigabitEthernet0/0/0/1
  !
  interface GigabitEthernet0/0/0/2
@@ -8,8 +10,11 @@ mpls traffic-eng
  !
  pce
   peer source ipv4 172.16.2.10
-  peer ipv4 172.16.2.1 # PCE IP 
+  peer ipv4 172.16.2.1
   !
+  peer ipv4 192.168.24.128
+  !
+  segment-routing
   stateful-client
    instantiation
   !
