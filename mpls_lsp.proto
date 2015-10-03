@@ -25,6 +25,12 @@ message LSP {
         optional uint32 node_mask =3;
     }
 
+    message EROSRSubObject {
+        optional bool loose =1;
+        optional uint32 node_label =2;
+        optional string node_ip =3;
+    }
+
     message RROSubObject {
         optional string node_ip =1;
         optional uint32 node_mask =2;
@@ -36,8 +42,9 @@ message LSP {
     optional LSPObject lsp_obj = 2;
     optional LSPAttributeObject lspa_obj = 3;
     repeated EROSubObject ero =4;
-    repeated RROSubObject rro =5;
-    optional SRPSubObject srp =6;
-    optional uint32 bandwidth = 7;
+    repeated EROSRSubObject srero =5;
+    repeated RROSubObject rro =6;
+    optional SRPSubObject srp =7;
+    optional uint32 bandwidth = 8;
 
 }
