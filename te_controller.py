@@ -48,6 +48,13 @@ class TEController(object):
                         ero.loose= ero_node[1]
                         ero.node_ip = ero_node[2]
                         ero.node_mask= ero_node[3]
+            if report_object[0] == "SR_ERO_lIST":
+                if len(report_object[1]) > 0:
+                    for ero_node in report_object[1]:
+                        srero = lsp.srero.add()
+                        srero.loose = ero_node[1]
+                        srero.node_label = ero_node[2]
+                        srero.node_ip = ero_node[3]
             if report_object[0] == "RRO_List":
                 if len (report_object[1]) > 0 :
                     for rro_node in report_object[1]:
