@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='mpls_lsp.proto',
   package='mplspce',
-  serialized_pb=_b('\n\x0empls_lsp.proto\x12\x07mplspce\"\xe9\x05\n\x03LSP\x12\x0e\n\x06pcc_ip\x18\x01 \x01(\t\x12\'\n\x07lsp_obj\x18\x02 \x01(\x0b\x32\x16.mplspce.LSP.LSPObject\x12\x31\n\x08lspa_obj\x18\x03 \x01(\x0b\x32\x1f.mplspce.LSP.LSPAttributeObject\x12&\n\x03\x65ro\x18\x04 \x03(\x0b\x32\x19.mplspce.LSP.EROSubObject\x12*\n\x05srero\x18\x05 \x03(\x0b\x32\x1b.mplspce.LSP.EROSRSubObject\x12&\n\x03rro\x18\x06 \x03(\x0b\x32\x19.mplspce.LSP.RROSubObject\x12&\n\x03srp\x18\x07 \x01(\x0b\x32\x19.mplspce.LSP.SRPSubObject\x12\x11\n\tbandwidth\x18\x08 \x01(\r\x1a\x8a\x01\n\tLSPObject\x12\x0f\n\x07plsp_id\x18\x01 \x01(\r\x12\x11\n\tdelegated\x18\x02 \x01(\x08\x12\x0c\n\x04sync\x18\x03 \x01(\x08\x12\x0e\n\x06remove\x18\x04 \x01(\x08\x12\x16\n\x0e\x61\x64ministrative\x18\x05 \x01(\x08\x12\x13\n\x0boperational\x18\x06 \x01(\r\x12\x0e\n\x06\x63reate\x18\x07 \x01(\x08\x1aU\n\x12LSPAttributeObject\x12\x12\n\nsetup_prio\x18\x01 \x01(\r\x12\x11\n\thold_prio\x18\x02 \x01(\r\x12\x18\n\x10local_protection\x18\x03 \x01(\x08\x1a\x41\n\x0c\x45ROSubObject\x12\r\n\x05loose\x18\x01 \x01(\x08\x12\x0f\n\x07node_ip\x18\x02 \x01(\t\x12\x11\n\tnode_mask\x18\x03 \x01(\r\x1a\x44\n\x0e\x45ROSRSubObject\x12\r\n\x05loose\x18\x01 \x01(\x08\x12\x12\n\nnode_label\x18\x02 \x01(\r\x12\x0f\n\x07node_ip\x18\x03 \x01(\t\x1a\x32\n\x0cRROSubObject\x12\x0f\n\x07node_ip\x18\x01 \x01(\t\x12\x11\n\tnode_mask\x18\x02 \x01(\r\x1a\x1e\n\x0cSRPSubObject\x12\x0e\n\x06srp_id\x18\x01 \x01(\r')
+  serialized_pb=_b('\n\x0empls_lsp.proto\x12\x07mplspce\"\xee\x06\n\x03LSP\x12\x0e\n\x06pcc_ip\x18\x01 \x01(\t\x12\'\n\x07lsp_obj\x18\x02 \x01(\x0b\x32\x16.mplspce.LSP.LSPObject\x12\x31\n\x08lspa_obj\x18\x03 \x01(\x0b\x32\x1f.mplspce.LSP.LSPAttributeObject\x12&\n\x03\x65ro\x18\x04 \x03(\x0b\x32\x19.mplspce.LSP.EROSubObject\x12*\n\x05srero\x18\x05 \x03(\x0b\x32\x1b.mplspce.LSP.EROSRSubObject\x12&\n\x03rro\x18\x06 \x03(\x0b\x32\x19.mplspce.LSP.RROSubObject\x12&\n\x03srp\x18\x07 \x01(\x0b\x32\x19.mplspce.LSP.SRPSubObject\x12\x11\n\tbandwidth\x18\x08 \x01(\r\x12\x16\n\x0e\x65ro_list_empty\x18\t \x01(\x08\x1a\xf4\x01\n\tLSPObject\x12\x0f\n\x07plsp_id\x18\x01 \x01(\r\x12\x11\n\tdelegated\x18\x02 \x01(\x08\x12\x0c\n\x04sync\x18\x03 \x01(\x08\x12\x0e\n\x06remove\x18\x04 \x01(\x08\x12\x16\n\x0e\x61\x64ministrative\x18\x05 \x01(\x08\x12\x13\n\x0boperational\x18\x06 \x01(\r\x12\x0e\n\x06\x63reate\x18\x07 \x01(\x08\x12\x15\n\rsymbolic_name\x18\x08 \x01(\t\x12\x15\n\rtunnel_source\x18\t \x01(\t\x12\x17\n\x0ftunnel_endpoint\x18\n \x01(\t\x12\x11\n\ttunnel_id\x18\x0b \x01(\r\x12\x0e\n\x06lsp_id\x18\x0c \x01(\r\x1aU\n\x12LSPAttributeObject\x12\x12\n\nsetup_prio\x18\x01 \x01(\r\x12\x11\n\thold_prio\x18\x02 \x01(\r\x12\x18\n\x10local_protection\x18\x03 \x01(\x08\x1a\x41\n\x0c\x45ROSubObject\x12\r\n\x05loose\x18\x01 \x01(\x08\x12\x0f\n\x07node_ip\x18\x02 \x01(\t\x12\x11\n\tnode_mask\x18\x03 \x01(\r\x1a\x44\n\x0e\x45ROSRSubObject\x12\r\n\x05loose\x18\x01 \x01(\x08\x12\x12\n\nnode_label\x18\x02 \x01(\r\x12\x0f\n\x07node_ip\x18\x03 \x01(\t\x1a\x32\n\x0cRROSubObject\x12\x0f\n\x07node_ip\x18\x01 \x01(\t\x12\x11\n\tnode_mask\x18\x02 \x01(\r\x1a!\n\x0cSRPSubObject\x12\x11\n\x06srp_id\x18\x01 \x01(\r:\x01\x30')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -81,6 +81,41 @@ _LSP_LSPOBJECT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='symbolic_name', full_name='mplspce.LSP.LSPObject.symbolic_name', index=7,
+      number=8, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='tunnel_source', full_name='mplspce.LSP.LSPObject.tunnel_source', index=8,
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='tunnel_endpoint', full_name='mplspce.LSP.LSPObject.tunnel_endpoint', index=9,
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='tunnel_id', full_name='mplspce.LSP.LSPObject.tunnel_id', index=10,
+      number=11, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='lsp_id', full_name='mplspce.LSP.LSPObject.lsp_id', index=11,
+      number=12, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -92,8 +127,8 @@ _LSP_LSPOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=327,
-  serialized_end=465,
+  serialized_start=351,
+  serialized_end=595,
 )
 
 _LSP_LSPATTRIBUTEOBJECT = _descriptor.Descriptor(
@@ -135,8 +170,8 @@ _LSP_LSPATTRIBUTEOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=467,
-  serialized_end=552,
+  serialized_start=597,
+  serialized_end=682,
 )
 
 _LSP_EROSUBOBJECT = _descriptor.Descriptor(
@@ -178,8 +213,8 @@ _LSP_EROSUBOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=554,
-  serialized_end=619,
+  serialized_start=684,
+  serialized_end=749,
 )
 
 _LSP_EROSRSUBOBJECT = _descriptor.Descriptor(
@@ -221,8 +256,8 @@ _LSP_EROSRSUBOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=621,
-  serialized_end=689,
+  serialized_start=751,
+  serialized_end=819,
 )
 
 _LSP_RROSUBOBJECT = _descriptor.Descriptor(
@@ -257,8 +292,8 @@ _LSP_RROSUBOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=691,
-  serialized_end=741,
+  serialized_start=821,
+  serialized_end=871,
 )
 
 _LSP_SRPSUBOBJECT = _descriptor.Descriptor(
@@ -271,7 +306,7 @@ _LSP_SRPSUBOBJECT = _descriptor.Descriptor(
     _descriptor.FieldDescriptor(
       name='srp_id', full_name='mplspce.LSP.SRPSubObject.srp_id', index=0,
       number=1, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
+      has_default_value=True, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -286,8 +321,8 @@ _LSP_SRPSUBOBJECT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=743,
-  serialized_end=773,
+  serialized_start=873,
+  serialized_end=906,
 )
 
 _LSP = _descriptor.Descriptor(
@@ -353,6 +388,13 @@ _LSP = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='ero_list_empty', full_name='mplspce.LSP.ero_list_empty', index=8,
+      number=9, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -365,7 +407,7 @@ _LSP = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=28,
-  serialized_end=773,
+  serialized_end=906,
 )
 
 _LSP_LSPOBJECT.containing_type = _LSP
