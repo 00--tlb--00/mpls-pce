@@ -1,3 +1,16 @@
+interface tunnel-te150
+ ipv4 unnumbered Loopback0
+ destination 4.4.4.4
+ pce
+  delegation
+ !
+!
+interface tunnel-te151
+ ipv4 unnumbered Loopback0
+ destination 4.4.4.4
+ pce
+  delegation
+!
 mpls traffic-eng
  interface GigabitEthernet0/0/0/0
   attribute-names RED
