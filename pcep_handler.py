@@ -44,7 +44,8 @@ class PCEP(object):
        self._spc_tlv = struct.pack("!HHI",16,4,5)
        self._spc_sr_tlv = struct.pack("!HHI",26,4,10)
        self._spc_sr_tlv_format = "!HHI"
-       self._symbolic_path_name_tlv = '!HH8s'
+       self._symbolic_path_name_tlv_upd = '!HH12s'
+       self._symbolic_path_name_tlv_init = '!HH8s'
        self._state = 'not_initialized'
        self._lsp_obj_fmt = "!I"
        self._lspa_obj_fmt = "!IIIBBBB"
@@ -57,6 +58,7 @@ class PCEP(object):
        self._open_subobj_fmt = "!BBH"
        self._state = 'not initialzied'
        self._functions_dict = dict()
+       self._lsp_obj_functions_dict = dict()
        '''self._functions_dict[4,1] = self.parse_endpoints_object'''
        self._functions_dict[5,1] = self.parse_bw_object
        self._functions_dict[5,2] = self.parse_bw_object
@@ -66,6 +68,9 @@ class PCEP(object):
        self._functions_dict[9,1] = self.parse_lspa_object
        self._functions_dict[32,1] = self.parse_lsp_object_od
        self._functions_dict[33,1] = self.parse_srp_object
+       self._lsp_obj_functions_dict[17] = self.parse_symbolic_path_name
+       self._lsp_obj_functions_dict[18] = self.parse_ipv4_lsp_identifier
+       self._lsp_obj_functions_dict[31] = self.parse_lsp_update_capability
 
 
    def ip2int(self, addr):
@@ -162,8 +167,72 @@ class PCEP(object):
      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
    '''
+   def parse_symbolic_path_name(self,msg,lsp_tlv_obj_type_len,subobj_offset=0,offset=0):
+       len=0
+       if (lsp_tlv_obj_type_len[1] >8) & (lsp_tlv_obj_type_len[1] <=12):
+           unpack_obj = struct.unpack_from("12s",msg[12+offset+subobj_offset+4:])
+           unpack_obj = unpack_obj[0].decode("utf-8")
+           unpack_obj = unpack_obj.strip('\x00')
+           len=12
+       elif(lsp_tlv_obj_type_len[1] >4) & (lsp_tlv_obj_type_len[1] <=8):
+           unpack_obj = struct.unpack_from("8s",msg[12+offset+subobj_offset+4:])
+           unpack_obj = unpack_obj[0].decode("utf-8")
+           unpack_obj = unpack_obj.strip('\x00')
+           len=8
+       return ("Symbolic_Name",len,unpack_obj,)
+
+
+   '''
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |           Type=[TBD]          |           Length=16           |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                   IPv4 Tunnel Sender Address                  |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |             LSP ID            |           Tunnel ID           |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                        Extended Tunnel ID                     |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                   IPv4 Tunnel Endpoint Address                |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                Figure 12: IPV4-LSP-IDENTIFIERS TLV format
+
+   '''
+
+
+   def parse_ipv4_lsp_identifier(self,msg,lsp_tlv_obj_type_len,subobj_offset=0,offset=0):
+       len=16
+       unpack_obj = struct.unpack_from("!IHHII",msg[12+offset+subobj_offset+4:])
+       lspobj_ip_tunnel_sender = unpack_obj[0]
+       lspobj_lsp_id = unpack_obj[1]
+       lspobj_tunnel_id=unpack_obj[2]
+       lspobj_ext_tunnel_id=unpack_obj[3]
+       lspobj_ip_tunnel_endpoint = unpack_obj[4]
+       return ("LSP_IDENTIFIER",len,self.int2ip(lspobj_ip_tunnel_sender),lspobj_lsp_id,lspobj_tunnel_id,self.int2ip(lspobj_ext_tunnel_id),self.int2ip(lspobj_ip_tunnel_endpoint))
+
+   def parse_lsp_update_capability(self,msg,lsp_tlv_obj_type_len,subobj_offset=0,offset=0):
+       len=0
+       lspobj_lsp_update_int=lspobj_lsp_update_h1=lspobj_lsp_update_h2=0
+       if (lsp_tlv_obj_type_len[1] >8) & (lsp_tlv_obj_type_len[1] <=12):
+           unpack_obj = struct.unpack_from("12c",msg[12+offset+subobj_offset+4:])
+           len=12
+           print ("Greater than 8 and i have no idea what it means")
+       elif (lsp_tlv_obj_type_len[1] >4) & (lsp_tlv_obj_type_len[1] <=8):
+           unpack_obj = struct.unpack_from("!IHH",msg[12+offset+subobj_offset+4:])
+           lspobj_lsp_update_int = unpack_obj[0]
+           lspobj_lsp_update_h1 = unpack_obj[1]
+           lspobj_lsp_update_h2 = unpack_obj[2]
+           len=8
+       elif (lsp_tlv_obj_type_len[1] <=4 ):
+           unpack_obj = struct.unpack_from("!I",msg[12+offset+subobj_offset+4])
+           lspobj_lsp_update_int = unpack_obj[0]
+           len=4
+       return ("LSP_UPDATE_CAPABILITY",len,lspobj_lsp_update_int,lspobj_lsp_update_h1,lspobj_lsp_update_h2)
 
    def parse_lsp_object_od(self, msg, com_obj_hdr, offset=0):
+       parsed_lsp_obj_tlv = list()
        lsp_obj = struct.unpack_from(self._lsp_obj_fmt,msg[8+offset:])
        plsp_id = lsp_obj[0] >> 12
        c_flag=d_flag=s_flag=r_flag=a_flag=o_flag = 0
@@ -180,19 +249,20 @@ class PCEP(object):
        if (lsp_obj[0] & 128):
            c_flag = 1
        if com_obj_hdr[3] > 8:
-           print('lsp_obj has TLVs')
-           ipv4_lsp_identifier_type_length = struct.unpack_from("!HH",msg[12+offset:])
-           ipv4_lsp_identifier_tunnel_sender = struct.unpack_from("8c",msg[16+offset:])
-           print ("Signalled Tunnel Name",b"".join((ipv4_lsp_identifier_tunnel_sender[0],
-                                           ipv4_lsp_identifier_tunnel_sender[1],
-                                           ipv4_lsp_identifier_tunnel_sender[2],
-                                           ipv4_lsp_identifier_tunnel_sender[3],
-                                           ipv4_lsp_identifier_tunnel_sender[4],
-                                           ipv4_lsp_identifier_tunnel_sender[5],
-                                           ipv4_lsp_identifier_tunnel_sender[6],
-                                           ipv4_lsp_identifier_tunnel_sender[7])))
+           parsed_lsp_tlv_obj_size =0
+           subobj_offset=0
+           while (parsed_lsp_tlv_obj_size+8) < com_obj_hdr[3]:
+               lsp_tlv_obj_type_len = struct.unpack_from("!HH",msg[12+offset+subobj_offset:])
+               if lsp_tlv_obj_type_len[0] in self._lsp_obj_functions_dict:
+                   ot = lsp_tlv_obj_type_len[0]
+                   parsed_obj = self._lsp_obj_functions_dict[ot](msg,lsp_tlv_obj_type_len,subobj_offset,offset)
+                   parsed_lsp_obj_tlv.append(parsed_obj)
+                   subobj_offset= subobj_offset+(parsed_obj[1]+4)
+                   parsed_lsp_tlv_obj_size=parsed_lsp_tlv_obj_size+(parsed_obj[1]+4)
+               else:
+                   print ("Unknown LSP Object TLV")
             #TODO: add tlv's parsing
-       return ('LSP_Object',(plsp_id,d_flag,s_flag,r_flag,a_flag,o_flag,c_flag))
+       return ('LSP_Object',(plsp_id,d_flag,s_flag,r_flag,a_flag,o_flag,c_flag,parsed_lsp_obj_tlv))
 
    def parse_state_report_msg(self,common_hdr,msg):
        offset = 0
@@ -259,18 +329,21 @@ class PCEP(object):
        parsed_ero_size = 0
        ero_list = list ()
        com_subobj_hdr = struct.unpack_from(self._open_subobj_fmt,msg[offset+8:])
-       if com_subobj_hdr[0] == 1:
-           while (parsed_ero_size + 4) < com_obj_hdr[3]:
-               sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
-               parsed_ero_size += sub_obj[0]
-               ero_list.append(sub_obj)
-           return ("ERO_List",(ero_list))
-       elif com_subobj_hdr[0] == 5:
-           while (parsed_ero_size+4) < com_obj_hdr[3]:
-               sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
-               parsed_ero_size+= sub_obj[0]
-               ero_list.append((sub_obj))
-           return ("SR_ERO_lIST",(ero_list))
+       if com_obj_hdr[3] > 4:
+           if com_subobj_hdr[0] == 1:
+               while (parsed_ero_size + 4) < com_obj_hdr[3]:
+                   sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
+                   parsed_ero_size += sub_obj[0]
+                   ero_list.append(sub_obj)
+               return ("ERO_List",(ero_list))
+           elif com_subobj_hdr[0] == 5:
+               while (parsed_ero_size+4) < com_obj_hdr[3]:
+                   sub_obj = self.parse_ero_subobject(msg[offset+8+parsed_ero_size:])
+                   parsed_ero_size+= sub_obj[0]
+                   ero_list.append((sub_obj))
+               return ("SR_ERO_lIST",(ero_list))
+       else:
+           return ("ERO_LIST_EMPTY",None)
 
    def parse_lspa_object(self,msg,com_obj_hdr,offset=0):
        lspa_obj = struct.unpack_from(self._lspa_obj_fmt,msg[offset+8:])
@@ -390,11 +463,13 @@ class PCEP(object):
        o_flag = obj[5]
        summary_obj = plsp_id << 12
        summary_obj |= (d_flag | (s_flag << 1) | (r_flag<<2) | (a_flag << 3) |o_flag << 4)
-       size = 4
+       size = 20 #Length + 4
+       SYMBOLIC_PATH_NAME= str.encode(obj[6])
+       symbolic_packed_obj = struct.pack(self._symbolic_path_name_tlv_upd,17,len(SYMBOLIC_PATH_NAME), SYMBOLIC_PATH_NAME)
        packed_obj = struct.pack("!I",summary_obj)
        packed_common_hdr = self.generate_common_obj_hdr(32,1,size+4)
-       print ("PLSP ID from Generate LSP and D Flag",plsp_id,d_flag)
-       return (size+4,b"".join((packed_common_hdr,packed_obj)))
+       print ("PLSP ID from Generate LSP ,D Flag and Symbolic Name",plsp_id,d_flag,SYMBOLIC_PATH_NAME)
+       return (size+4,b"".join((packed_common_hdr,packed_obj,symbolic_packed_obj)))
 
    '''
    0                   1                   2                   3
@@ -430,7 +505,7 @@ class PCEP(object):
        summary_obj |= (d_flag | (s_flag << 1) | (r_flag<<2) | (a_flag << 3) | (o_flag << 4)  )
        size = 16 #Length + 4
        SYMBOLIC_PATH_NAME= TUNNEL_NAME
-       symbolic_packed_obj = struct.pack(self._symbolic_path_name_tlv,17,len(SYMBOLIC_PATH_NAME), SYMBOLIC_PATH_NAME)
+       symbolic_packed_obj = struct.pack(self._symbolic_path_name_tlv_init,17,len(SYMBOLIC_PATH_NAME), SYMBOLIC_PATH_NAME)
        packed_obj = struct.pack("!I",summary_obj)
        packed_common_hdr = self.generate_common_obj_hdr(32,1,size+4)
        return (size+4,b"".join((packed_common_hdr,packed_obj,symbolic_packed_obj)))
@@ -478,8 +553,6 @@ class PCEP(object):
 
    '''
 
-
-
    def generate_sr_ero_subobject(self,sr_ero_subobj):
        size=12
        subobj_type =5
@@ -500,7 +573,6 @@ class PCEP(object):
            packed_ero_obj = packed_ero_obj + packed_subobj[1]
        packed_common_hdr = self.generate_common_obj_hdr(7,1,subobj_size+4)
        return (subobj_size+4,packed_common_hdr + packed_ero_obj)
-
 
    def generate_ero_object(self,ero_list):
        subobj_size=0
@@ -578,37 +650,37 @@ class PCEP(object):
            return (self.generate_lsp_upd_msg(msg[1]))
        return None
 
-   def generate_lsp_upd_msg(self,obj_list):
+   def generate_lsp_upd_msg(self,obj_list,ERO_LIST):
        size = 0
        packed_lspupd_msg =b''
+       ero_ip_list = list ()
        if self._srp_id < 255 :
            packed_srp_msg_obj = self.generate_srp_object(self._srp_id)
            self._srp_id+= 1
        else:
            self._srp_id =1
            packed_srp_msg_obj = self.generate_srp_object(self._srp_id)
-
        size += packed_srp_msg_obj[0]
        packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_srp_msg_obj[1]))
        for obj in obj_list:
-           print ("The Object is " , obj)
            if obj[0] == 'LSP_Object':
                packed_lsp_msg_obj = self.generate_lsp_obj(obj[1])
                size+= packed_lsp_msg_obj[0]
                packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_lsp_msg_obj[1]))
            elif obj[0] == 'ERO_List':
-               user_ero_list = [(1,self.ip2int('2.2.2.2'),32),(1,self.ip2int('3.3.3.3'),32),(1,self.ip2int('4.4.4.4'),32)]
-               packed_ero_msg_obj = self.generate_ero_object(user_ero_list)
+               packed_ero_msg_obj = self.generate_ero_object(obj[1])
                size+=packed_ero_msg_obj[0]
+               packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_ero_msg_obj[1]))
+           elif obj[0] == 'ERO_List_EMPTY':
+               for ero in ERO_LIST:
+                   ero_ip_list.append((0,self.ip2int(ero),32))
+               packed_ero_msg_obj = self.generate_ero_object(ero_ip_list)
+               size+= packed_ero_msg_obj[0]
                packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_ero_msg_obj[1]))
            elif obj[0] == 'LSPA':
                packed_lspa_msg_obj = self.generate_lspa_obj(obj[1])
                size+= packed_lspa_msg_obj[0]
                packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_lspa_msg_obj[1]))
-           elif obj[0] == 'Bandwidth_Object':
-               packed_bw_msg_obj = self.generate_bw_object(obj[1])
-               size+=packed_bw_msg_obj[0]
-               packed_lspupd_msg = b"".join((packed_lspupd_msg,packed_bw_msg_obj[1]))
        common_hdr = struct.pack(self._common_hdr_format,32,11,size+4)
        return b"".join((common_hdr,packed_lspupd_msg))
 
@@ -655,7 +727,6 @@ class PCEP(object):
        size =0
        ero_ip_list = list ()
        packed_lspint_msg = b''
-
        if self._srp_id < 255:
            packed_srp_msg_obj = self.generate_srp_object(self._srp_id)
            self._srp_id+=1
@@ -692,13 +763,3 @@ class PCEP(object):
        '''
        common_hdr = struct.pack(self._common_hdr_format,32,12,size+4)
        return b"".join((common_hdr,packed_lspint_msg))
-
-
-
-
-
-
-
-
-
-
