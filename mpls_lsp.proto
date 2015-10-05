@@ -11,6 +11,11 @@ message LSP {
         optional bool administrative = 5;
         optional uint32 operational = 6;
         optional bool create = 7;
+        optional string symbolic_name =8;
+        optional string tunnel_source =9;
+        optional string tunnel_endpoint =10;
+        optional uint32 tunnel_id = 11;
+        optional uint32 lsp_id = 12;
     }
 
     message LSPAttributeObject {
@@ -36,7 +41,7 @@ message LSP {
         optional uint32 node_mask =2;
     }
     message SRPSubObject {
-        optional uint32 srp_id = 1;
+        optional uint32 srp_id = 1 [default = 0];
     }
 
     optional LSPObject lsp_obj = 2;
@@ -46,5 +51,6 @@ message LSP {
     repeated RROSubObject rro =6;
     optional SRPSubObject srp =7;
     optional uint32 bandwidth = 8;
+    optional bool ero_list_empty = 9;
 
 }
